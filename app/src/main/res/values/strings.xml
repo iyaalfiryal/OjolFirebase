@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">OjolFirebase</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="email">email</string>
+    <string name="password">password</string>
+    <string name="login">login</string>
+    <string name="don_t_have_account_sign_up">Don\'t have account? Sign Up</string>
+    <string name="or">or</string>
+    <string name="sign_up_google">Sign Up Google</string>
+    <string name="nama">nama</string>
+    <string name="_hp">hp</string>
+    <string name="_confirm_password">confirm password</string>
+    <string name="sign_up">Sign Up</string>
+</resources>

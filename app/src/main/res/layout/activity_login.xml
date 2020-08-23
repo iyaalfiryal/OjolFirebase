@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.LoginActivity"
+    android:background="@drawable/satu">
+
+    <EditText
+        android:id="@+id/loginEmail"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_45dp"
+        android:gravity="center"
+        android:hint="@string/email"
+        android:layout_marginTop="@dimen/_140dp"
+        android:layout_marginLeft="@dimen/_30dp"
+        android:layout_marginRight="@dimen/_30dp"
+        android:textSize="@dimen/_18sp"
+        android:background="@drawable/background"/>
+
+    <EditText
+        android:id="@+id/loginPassword"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_45dp"
+        android:gravity="center"
+        android:hint="@string/password"
+        android:layout_marginTop="@dimen/_10dp"
+        android:layout_marginLeft="@dimen/_30dp"
+        android:layout_marginRight="@dimen/_30dp"
+        android:textSize="@dimen/_18sp"
+        android:background="@drawable/background"
+        android:layout_below="@+id/loginEmail"/>
+
+    <Button
+        android:id="@+id/loginButton"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_45dp"
+        android:layout_marginRight="@dimen/_30dp"
+        android:layout_marginLeft="@dimen/_30dp"
+        android:layout_marginTop="@dimen/_20dp"
+        android:text="@string/login"
+        android:background="@drawable/background2"
+        android:textColor="@color/white"
+        android:layout_below="@+id/loginPassword" />
+
+    <TextView
+        android:id="@+id/signUpLink"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/don_t_have_account_sign_up"
+        android:gravity="center"
+        android:layout_below="@+id/loginButton"
+        android:layout_marginTop="@dimen/_10dp"
+        android:layout_marginLeft="@dimen/_30dp"
+        android:layout_marginRight="@dimen/_30dp"/>
+
+    <TextView
+        android:id="@+id/textOr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/or"
+        android:textSize="@dimen/_20sp"
+        android:gravity="center"
+        android:layout_marginTop="@dimen/_20dp"
+        android:layout_marginRight="@dimen/_30dp"
+        android:layout_marginLeft="@dimen/_30dp"
+        android:layout_below="@+id/signUpLink"/>
+
+    <Button
+        android:id="@+id/signUpButtonGmail"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_45dp"
+        android:text="@string/sign_up_google"
+        android:background="@drawable/background2"
+        android:textColor="@color/white"
+        android:layout_marginTop="@dimen/_20dp"
+        android:layout_marginLeft="@dimen/_30dp"
+        android:layout_marginRight="@dimen/_30dp"
+        android:layout_below="@+id/textOr"/>
+
+</RelativeLayout>
