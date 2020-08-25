@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "501125406856-es1co55b7fmc0uinhqqfmhkvfh9g2838.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.idniyal.ojekonline",
+            "certificate_hash": "615b0cae096b82593aa58541a6c7871bd6fb0d79"
+          }
+        },
+        {
           "client_id": "501125406856-g1vopco4j27bcri9rccd08bjneatpt3l.apps.googleusercontent.com",
           "client_type": 3
         }

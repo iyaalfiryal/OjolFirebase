@@ -13,4 +13,17 @@
     <string name="_hp">hp</string>
     <string name="_confirm_password">confirm password</string>
     <string name="sign_up">Sign Up</string>
+    <string name="input_nomer_hp">input nomer hp</string>
+    <string name="history">history</string>
+    <string name="profile">profile</string>
+    <string name="namaku">firyal</string>
+    <string name="nama_">Nama :</string>
+    <string name="iyal_gmail_com">iyal@gmail.com</string>
+    <string name="email_">email :</string>
+    <string name="cileungsi_bogor">cileungsi, bogor</string>
+    <string name="dari_mana">dari mana?</string>
+    <string name="rp_50_000">Rp 50.000</string>
+    <string name="estimasi_waktu">estimasi waktu</string>
+    <string name="_3menit">3 menit</string>
+    <string name="pesan">pesan</string>
 </resources>
