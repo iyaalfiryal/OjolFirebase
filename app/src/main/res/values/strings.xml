@@ -26,4 +26,5 @@
     <string name="estimasi_waktu">estimasi waktu</string>
     <string name="_3menit">3 menit</string>
     <string name="pesan">pesan</string>
+    <string name="title_activity_maps">Map</string>
 </resources>
