@@ -12,7 +12,6 @@ import com.idniyal.ojolfirebase.R
 
 class DashboardFragment : Fragment() {
 
-    private lateinit var dashboardViewModel: DashboardViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
