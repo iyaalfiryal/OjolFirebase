@@ -5,6 +5,7 @@ import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.app.Dialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Geocoder
@@ -14,6 +15,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -31,6 +34,7 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.AutocompleteActivity
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -49,7 +53,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.android.synthetic.main.fragment_home.*
+import org.jetbrains.anko.sdk27.coroutines.onClick
+import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.alert
+import org.jetbrains.anko.support.v4.toast
 import java.lang.StringBuilder
 import java.util.*
 
@@ -75,11 +82,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(
-            R.layout
-                .fragment_home, container,
-            false
+            R.layout.fragment_home, container, false
         )
     }
+
 
     //menampilkan maps ke fragment
     override fun onMapReady(p0: GoogleMap?) {
@@ -98,11 +104,64 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         //menginisialisasi dari mapsview
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { this }
+
+        showPermission()
+        visibleView(false)
+//        keyy?.let {bookingHistoryUser(it)}
+
+        home_awal?.onClick {
+            takeLocation(1)
+        }
+
+        home_tujuan.onClick {
+            takeLocation(2)
+        }
+
+        home_bottom_next?.onClick {
+            if(home_awal?.text?.isNotEmpty()!!
+                && home_tujuan.text.isNotEmpty()){
+                insertServer()
+            }else{
+                toast("tidak bleh kosong").show()
+                view.let { Snackbar.make(it, "tidk boleh kosong",
+                    Snackbar.LENGTH_SHORT).show() }
+            }
+        }
+    }
+
+
+    private fun showPermission() {
+        showGPS()
+
+        if (activity?.let {
+                ContextCompat.checkSelfPermission(
+                    it,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            } != PackageManager.PERMISSION_GRANTED) {
+
+            if (activity?.let {
+                    ActivityCompat.shouldShowRequestPermissionRationale(
+                        it, android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                }!!) {
+
+                showGPS()
+
+            } else{
+                requestPermissions(
+                    arrayOf(
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    ), 1
+                )
+            }
+        }
     }
 
 
     //insert data booking ke realtime database
-    private fun insertServer(){
+    private fun insertServer() {
         val currentTime = Calendar.getInstance().time
         tanggal = currentTime.toString()
         insertRequest(
@@ -130,7 +189,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         lonTujuan: Double?,
         harga: String,
         jarak: String
-    ): Boolean{
+    ): Boolean {
 
         val booking = Booking()
         booking.tanggal = tanggal
@@ -152,7 +211,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val k = keyy
 
         pushNotif(booking)
-        k?.let { bookingHistoryUser(it) }
+//        k?.let { bookingHistoryUser(it) }
 
         myRef.child(keyy ?: "").setValue(booking)
 
@@ -163,14 +222,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         val database = FirebaseDatabase.getInstance()
         val myRef = database.getReference("Driver")
-        myRef.addValueEventListener(object : ValueEventListener{
+        myRef.addValueEventListener(object : ValueEventListener {
             override fun onCancelled(error: DatabaseError) {
 
             }
 
             override fun onDataChange(snapshot: DataSnapshot) {
 
-                for(issue in snapshot.children){
+                for (issue in snapshot.children) {
                     val token = issue.child("token")
                         .getValue(String::class.java)
 
@@ -208,7 +267,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
 
     @SuppressLint("CheckResult")
-    private fun route(){
+    private fun route() {
         val origin = latAwal.toString() + "," + lonAwal.toString()
         val dest = latAkhir.toString() + "," + lonAkhir.toString()
 
@@ -216,7 +275,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             .actionRoute(origin, dest, Constan.API_KEY)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeOn(Schedulers.io())
-            .subscribe({t: ResultRoute? ->
+            .subscribe({ t: ResultRoute? ->
                 showData(t?.routes)
             }, {})
     }
@@ -226,7 +285,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         visibleView(true)
 
-        if(routes != null){
+        if (routes != null) {
             val point = routes[0]?.overviewPolyline?.points
             jarak = routes[0]?.legs?.get(0)?.distance?.text
             val jarakValue = routes[0]?.legs?.get(0)?.distance?.value
@@ -241,7 +300,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
             home_price.text = "Rp, " + price2
 
-        } else{
+        } else {
             alert {
                 message = "data route null"
             }.show()
@@ -249,21 +308,23 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun visibleView(status: Boolean) {
-        if(status){
+        if (status) {
             home_bottom?.visibility = View.VISIBLE
             home_bottom_next?.visibility = View.VISIBLE
-        }else{
+        } else {
             home_bottom?.visibility = View.GONE
             home_bottom_next?.visibility = View.GONE
         }
     }
 
     //proses mengarahkan autocomplete google place
-    fun takeLocation(status: Int){
-        try{
-            context?.applicationContext?.let { Places.initialize(
-                it, Constan.API_KEY
-            )}
+    fun takeLocation(status: Int) {
+        try {
+            context?.applicationContext?.let {
+                Places.initialize(
+                    it, Constan.API_KEY
+                )
+            }
 
             val fields = arrayListOf(
                 Place.Field.ID, Place.Field.NAME,
@@ -271,57 +332,63 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             )
 
             val intent = context?.applicationContext?.let {
-                Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN
-                , fields).build(it)
+                Autocomplete.IntentBuilder(
+                    AutocompleteActivityMode.FULLSCREEN
+                    , fields
+                ).build(it)
             }
 
             startActivityForResult(intent, status)
-        } catch (e: GooglePlayServicesRepairableException){
+        } catch (e: GooglePlayServicesRepairableException) {
 
-        } catch (e: GooglePlayServicesNotAvailableException){
+        } catch (e: GooglePlayServicesNotAvailableException) {
 
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == 1){
-            if (resultCode == RESULT_OK){
-                val place = data?.let{Autocomplete.getPlaceFromIntent(it)}
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                val place = data?.let { Autocomplete.getPlaceFromIntent(it) }
 
                 latAwal = place?.latLng?.latitude
                 lonAwal = place?.latLng?.longitude
 
                 home_awal.text = place?.address.toString()
-                showMainMarker(latAwal ?: 0.0, lonAwal ?: 0.0,
-                    place?.address.toString())
+                showMainMarker(
+                    latAwal ?: 0.0, lonAwal ?: 0.0,
+                    place?.address.toString()
+                )
 
-                Log.i("location", "place: "+ place?.name)
-            } else if (resultCode == AutocompleteActivity.RESULT_ERROR){
+                Log.i("location", "place: " + place?.name)
+            } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 val status = data?.let { Autocomplete.getStatusFromIntent(it) }
 
                 Log.i("locations", status?.statusMessage)
-            }else if(resultCode == RESULT_CANCELED){
+            } else if (resultCode == RESULT_CANCELED) {
 
             }
-        } else{
+        } else {
 
-            if(resultCode == RESULT_OK){
+            if (resultCode == RESULT_OK) {
                 val place = data?.let { Autocomplete.getPlaceFromIntent(it) }
 
                 latAkhir = place?.latLng?.latitude
                 lonAkhir = place?.latLng?.longitude
 
                 home_tujuan.text = place?.address.toString()
-                showMarker(latAkhir ?: 0.0, lonAwal ?: 0.0,
-                    place?.address.toString())
+                showMarker(
+                    latAkhir ?: 0.0, lonAwal ?: 0.0,
+                    place?.address.toString()
+                )
 
                 route()
 
-                Log.i("locations", "place"+ place?.name)
-            } else if (resultCode == AutocompleteActivity.RESULT_ERROR){
+                Log.i("locations", "place" + place?.name)
+            } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 val status = data?.let { Autocomplete.getStatusFromIntent(it) }
                 Log.i("locations", status?.statusMessage)
-            }else if(resultCode == RESULT_CANCELED){
+            } else if (resultCode == RESULT_CANCELED) {
 
             }
         }
@@ -355,7 +422,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     //menampilkan lokasi menggunakan marker
 
     //marker origin
-    private fun showMainMarker(lat: Double, lon: Double, msg: String){
+    private fun showMainMarker(lat: Double, lon: Double, msg: String) {
         val res = context?.resources
         val marker1 = BitmapFactory
             .decodeResource(res, R.drawable.placeholder)
@@ -365,10 +432,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val coordinate = LatLng(lat, lon)
 
         //membuat pin baru di android
-        map?.addMarker(MarkerOptions()
-            .position(coordinate)
-            .title(msg)
-            .icon(BitmapDescriptorFactory.fromBitmap(smallmarker)))
+        map?.addMarker(
+            MarkerOptions()
+                .position(coordinate)
+                .title(msg)
+                .icon(BitmapDescriptorFactory.fromBitmap(smallmarker))
+        )
 
         //mengatur zoom camera
         map?.animateCamera(CameraUpdateFactory.newLatLngZoom(coordinate, 16f))
@@ -383,20 +452,23 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private fun showMarker(lat: Double, lon: Double, msg: String) {
         val coordinat = LatLng(lat, lon)
 
-        map?.addMarker(MarkerOptions()
-            .position(coordinat)
-            .title(msg))
+        map?.addMarker(
+            MarkerOptions()
+                .position(coordinat)
+                .title(msg)
+        )
 
-        map?.animateCamera(CameraUpdateFactory
-            .newLatLngZoom(coordinat, 16f))
+        map?.animateCamera(
+            CameraUpdateFactory
+                .newLatLngZoom(coordinat, 16f)
+        )
 
         map?.moveCamera(CameraUpdateFactory.newLatLng(coordinat))
     }
 
 
-
     override fun onResume() {
-        keyy?.let { bookingHistoryUser(it) }
+//        keyy?.let { bookingHistoryUser(it) }
         mapView?.onResume()
         super.onResume()
     }
@@ -416,8 +488,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mapView?.onLowMemory()
     }
 
-    private fun bookingHistoryUser(it: String): Any {
-
-    }
+//    private fun bookingHistoryUser(it: String): Any {
+//
+//    }
 
 }
