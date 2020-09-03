@@ -49,6 +49,7 @@ import com.idniyal.ojolfirebase.network.NetworkModule
 import com.idniyal.ojolfirebase.network.RequestNotification
 import com.idniyal.ojolfirebase.utils.ChangeFormat
 import com.idniyal.ojolfirebase.utils.Constan
+import com.idniyal.ojolfirebase.utils.DirectionMapsV2
 import com.idniyal.ojolfirebase.utils.GPSTrack
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -111,7 +112,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         //menginisialisasi dari mapsview
         mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync { this }
+        mapView.getMapAsync (this)
 
         showPermission()
         visibleView(false)
@@ -126,8 +127,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             takeLocation(2)
         }
 
-        home_bottom_next?.onClick {
-            if(home_awal?.text?.isNotEmpty()!!
+        home_bottom_next.onClick {
+            if(home_awal.text.isNotEmpty()
                 && home_tujuan.text.isNotEmpty()){
                 insertServer()
             }else{
@@ -138,35 +139,31 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    private fun bookingHistoryUser(key: String) {
+        showDialog(true)
+        val database = FirebaseDatabase.getInstance()
+        val myRef = database.getReference(Constan.tb_booking)
 
-    private fun showPermission() {
-        showGPS()
+        myRef.child(key).addValueEventListener(object : ValueEventListener{
+            override fun onCancelled(error: DatabaseError) {
 
-        if (activity?.let {
-                ContextCompat.checkSelfPermission(
-                    it,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            } != PackageManager.PERMISSION_GRANTED) {
-
-            if (activity?.let {
-                    ActivityCompat.shouldShowRequestPermissionRationale(
-                        it, android.Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                }!!) {
-
-                showGPS()
-
-            } else{
-                requestPermissions(
-                    arrayOf(
-                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION
-                    ), 1
-                )
             }
-        }
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+
+                val booking = snapshot.getValue(Booking::class.java)
+                if(booking?.driver != ""){
+                    startActivity<WaitingDriverActivity>(Constan
+                        .key to key)
+                    showDialog(false)
+                }
+            }
+
+        })
+
     }
+
+
 
 
     //insert data booking ke realtime database
@@ -270,6 +267,43 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     }
 
+    private fun showDialog(status: Boolean) {
+        dialog = Dialog(activity!!)
+        dialog?.setContentView(R.layout.dialogwaitingdriver)
+
+        if(status){
+            dialog?.show()
+        }else dialog?.dismiss()
+    }
+
+    private fun showPermission() {
+        showGPS()
+
+        if (activity?.let {
+                ContextCompat.checkSelfPermission(
+                    it,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            } != PackageManager.PERMISSION_GRANTED) {
+
+            if (activity?.let {
+                    ActivityCompat.shouldShowRequestPermissionRationale(
+                        it, android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                }!!) {
+
+                showGPS()
+
+            } else{
+                requestPermissions(
+                    arrayOf(
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    ), 1
+                )
+            }
+        }
+    }
 
     //menampilkan lokasi user berdasarkan gps device
     private fun showGPS() {
@@ -287,48 +321,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         } else gps.showSettingGPS()
 
-    }
-
-
-    @SuppressLint("CheckResult")
-    private fun route() {
-        val origin = latAwal.toString() + "," + lonAwal.toString()
-        val dest = latAkhir.toString() + "," + lonAkhir.toString()
-
-        NetworkModule.getService()
-            .actionRoute(origin, dest, Constan.API_KEY)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeOn(Schedulers.io())
-            .subscribe({ t: ResultRoute? ->
-                showData(t?.routes)
-            }, {})
-    }
-
-    //menampilkan harga, route
-    private fun showData(routes: List<RoutesItem?>?) {
-
-        visibleView(true)
-
-        if (routes != null) {
-            val point = routes[0]?.overviewPolyline?.points
-            jarak = routes[0]?.legs?.get(0)?.distance?.text
-            val jarakValue = routes[0]?.legs?.get(0)?.distance?.value
-            val waktu = routes[0]?.legs?.get(0)?.duration?.text
-
-            home_waktu_distance.text = waktu + "(" + jarak + ")"
-
-            val pricex = jarakValue?.toDouble()?.let { Math.round(it) }
-
-            val price = pricex?.div(1000.0)?.times(2000.0)
-            val price2 = ChangeFormat.toRupiahFormat2(price.toString())
-
-            home_price.text = "Rp, " + price2
-
-        } else {
-            alert {
-                message = "data route null"
-            }.show()
-        }
     }
 
     private fun visibleView(status: Boolean) {
@@ -417,6 +409,51 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
         }
     }
+
+    @SuppressLint("CheckResult")
+    private fun route() {
+        val origin = latAwal.toString() + "," + lonAwal.toString()
+        val dest = latAkhir.toString() + "," + lonAkhir.toString()
+
+        NetworkModule.getService()
+            .actionRoute(origin, dest, Constan.API_KEY)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(Schedulers.io())
+            .subscribe({ t: ResultRoute? ->
+                showData(t?.routes)
+            }, {})
+    }
+
+    //menampilkan harga, route
+    private fun showData(routes: List<RoutesItem?>?) {
+
+        visibleView(true)
+
+        if (routes != null) {
+            val point = routes[0]?.overviewPolyline?.points
+            jarak = routes[0]?.legs?.get(0)?.distance?.text
+            val jarakValue = routes[0]?.legs?.get(0)?.distance?.value
+            val waktu = routes[0]?.legs?.get(0)?.duration?.text
+
+            home_waktu_distance.text = waktu + "(" + jarak + ")"
+
+            val pricex = jarakValue?.toDouble()?.let { Math.round(it) }
+
+            val price = pricex?.div(1000.0)?.times(2000.0)
+            val price2 = ChangeFormat.toRupiahFormat2(price.toString())
+
+            home_price.text = "Rp, " + price2
+            DirectionMapsV2.gambarRoute(map!!, point!!)
+
+        } else {
+            alert {
+                message = "data route null"
+            }.show()
+        }
+    }
+
+
+
 
     //GEOCODER
     //menerjemahkan dari koordinat jadi nama lokasi
@@ -512,38 +549,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mapView?.onLowMemory()
     }
 
-    private fun bookingHistoryUser(key: String) {
-        showDialog(true)
-        val database = FirebaseDatabase.getInstance()
-        val myRef = database.getReference(Constan.tb_booking)
 
-        myRef.child(key).addValueEventListener(object : ValueEventListener{
-            override fun onCancelled(error: DatabaseError) {
-
-            }
-
-            override fun onDataChange(snapshot: DataSnapshot) {
-
-                val booking = snapshot.getValue(Booking::class.java)
-                if(booking?.driver != ""){
-                    startActivity<WaitingDriverActivity>(Constan
-                        .key to key)
-                    showDialog(false)
-                }
-            }
-
-        })
-
-    }
-
-    private fun showDialog(status: Boolean) {
-        dialog = Dialog(activity!!)
-        dialog?.setContentView(R.layout.dialogwaitingdriver)
-
-        if(status){
-            dialog?.show()
-        }else dialog?.dismiss()
-    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
