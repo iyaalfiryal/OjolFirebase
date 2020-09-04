@@ -96,17 +96,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
 
-    //menampilkan maps ke fragment
-    override fun onMapReady(p0: GoogleMap?) {
-        map = p0
-        map?.uiSettings?.isMyLocationButtonEnabled = false
-        map?.moveCamera(
-            CameraUpdateFactory.newLatLngZoom(
-                LatLng(-6.3088652, 106.682188), 12f
-            )
-        )
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -162,8 +151,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         })
 
     }
-
-
 
 
     //insert data booking ke realtime database
@@ -224,17 +211,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         return true
     }
 
+
     private fun pushNotif(booking: Booking) {
 
         val database = FirebaseDatabase.getInstance()
         val myRef = database.getReference("Driver")
         myRef.addValueEventListener(object : ValueEventListener {
             override fun onCancelled(error: DatabaseError) {
-
             }
 
             override fun onDataChange(snapshot: DataSnapshot) {
-
                 for (issue in snapshot.children) {
                     val token = issue.child("token")
                         .getValue(String::class.java)
@@ -452,9 +438,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-
-
-
     //GEOCODER
     //menerjemahkan dari koordinat jadi nama lokasi
     private fun showName(lat: Double, lon: Double): String? {
@@ -527,6 +510,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         map?.moveCamera(CameraUpdateFactory.newLatLng(coordinat))
     }
 
+    //menampilkan maps ke fragment
+    override fun onMapReady(p0: GoogleMap?) {
+        map = p0
+        map?.uiSettings?.isMyLocationButtonEnabled = false
+        map?.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(-6.3088652, 106.682188), 12f
+            )
+        )
+    }
 
     override fun onResume() {
         keyy?.let { bookingHistoryUser(it) }
@@ -548,8 +541,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         super.onLowMemory()
         mapView?.onLowMemory()
     }
-
-
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
